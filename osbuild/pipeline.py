@@ -211,10 +211,11 @@ class Stage:
                 inputs[key] = data
 
             devmgr = DeviceManager(mgr, build_root.dev, tree)
-            for dev in self.devices:
-                print("device: " + str(dev))
-                syslog.syslog("device:" + str(dev))
+            for dev in self.devices.items():
+                syslog.syslog("device: " + str(dev))
+                
             for name, dev in self.devices.items():
+                syslog.syslog("name: " + name + "dev: " + str(dev))
                 devices[name] = devmgr.open(dev)
 
             mntmgr = MountManager(devmgr, mounts_tmpdir)
