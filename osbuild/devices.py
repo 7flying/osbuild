@@ -16,6 +16,7 @@ import abc
 import hashlib
 import json
 import os
+import syslog
 
 from typing import Dict, Optional, Any
 
@@ -73,6 +74,7 @@ class DeviceManager:
         return os.path.join(self.devpath, relpath)
 
     def open(self, dev: Device) -> Dict:
+        syslog.syslog("current devices: " + str(self.devices))
 
         parent = self.device_relpath(dev.parent)
 
@@ -86,7 +88,7 @@ class DeviceManager:
             # per device options
             "options": dev.options,
         }
-
+        syslog.syslog("args: " + str(args))
         mgr = self.service_manager
 
         client = mgr.start(f"device/{dev.name}", dev.info.path)
