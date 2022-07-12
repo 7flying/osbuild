@@ -3,6 +3,7 @@ import contextlib
 import hashlib
 import json
 import os
+import syslog
 from typing import Dict, Generator, Iterable, Iterator, List, Optional
 
 from .api import API
@@ -210,6 +211,8 @@ class Stage:
                 inputs[key] = data
 
             devmgr = DeviceManager(mgr, build_root.dev, tree)
+            for dev in self.devices:
+                syslog.syslog("device:" + str(dev))
             for name, dev in self.devices.items():
                 devices[name] = devmgr.open(dev)
 
