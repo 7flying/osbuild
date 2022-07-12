@@ -45,6 +45,9 @@ class Device:
         m.update(json.dumps(self.options, sort_keys=True).encode())
         return m.hexdigest()
 
+    def __repr__(self):
+        return str(self.__dict__)
+
 
 class DeviceManager:
     """Manager for Devices
