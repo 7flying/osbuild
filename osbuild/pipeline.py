@@ -212,6 +212,7 @@ class Stage:
 
             devmgr = DeviceManager(mgr, build_root.dev, tree)
             for dev in self.devices:
+                print("device: " + str(dev))
                 syslog.syslog("device:" + str(dev))
             for name, dev in self.devices.items():
                 devices[name] = devmgr.open(dev)
