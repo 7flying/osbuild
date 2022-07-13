@@ -113,10 +113,10 @@ class CryptDeviceService(devices.DeviceService):
             syslog.syslog(msg)
             throwRuntime = True
             runtimeMess = msg
-        res = subprocess.run(["cryptsetup", "-q", "luksDump", devpath])
-        if res:
-            syslog.syslog("luksDump result: " + str(res.returncode))
-            syslog.syslog("output: " + res.stdout.strip())
+        # res = subprocess.run(["cryptsetup", "-q", "luksDump", devpath])
+        # if res:
+        #     syslog.syslog("luksDump result: " + str(res.returncode))
+        #     syslog.syslog("output: " + res.stdout.strip())
 
         if throwRuntime:
             raise RuntimeError(runtimeMess)
