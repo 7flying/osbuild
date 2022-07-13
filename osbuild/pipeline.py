@@ -214,6 +214,7 @@ class Stage:
                 
             for name, dev in self.devices.items():
                 syslog.syslog("name: " + name + ", dev: " + str(dev))
+                syslog.syslog("trying to open: " + str(dev))
                 devices[name] = devmgr.open(dev)
 
             mntmgr = MountManager(devmgr, mounts_tmpdir)

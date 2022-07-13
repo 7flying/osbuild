@@ -308,6 +308,9 @@ class ModuleInfo:
         self.opts = info["schema"]
         self.caps = info["caps"]
 
+    def __repr__(self):
+        return str(self.__dict__)
+
     def _load_opts(self, version, fallback=None):
         raw = self.opts[version]
         if not raw and fallback:
