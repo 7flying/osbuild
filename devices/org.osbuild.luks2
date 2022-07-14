@@ -99,6 +99,7 @@ class CryptDeviceService(devices.DeviceService):
         self.lock = UdevInhibitor.for_dm_name(devname)
 
         # Make sure the logical volume is activated
+        syslog.syslog("cryptsetup -q open " +  parent_dev + " " + devname + " " + passphrase)
         res = subprocess.run(["cryptsetup", "-q", "open", parent_dev, devname],
                              check=False,
                              stdout=subprocess.PIPE,
@@ -121,6 +122,7 @@ class CryptDeviceService(devices.DeviceService):
         if throwRuntime:
             raise RuntimeError(runtimeMess)
 
+        syslog.syslog("opened as " + devname)
         print(f"opened as {devname}")
 
         # Now that device is successfully opened, we check on close
@@ -142,6 +144,7 @@ class CryptDeviceService(devices.DeviceService):
                 "minor": minor
             }
         }
+        syslog.syslog(str(data))
         return data
 
     def close(self):

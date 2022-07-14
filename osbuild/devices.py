@@ -74,8 +74,8 @@ class DeviceManager:
         return os.path.join(self.devpath, relpath)
 
     def open(self, dev: Device) -> Dict:
-        syslog.syslog("opening: " + str(dev))
-        syslog.syslog("current devices: " + str(self.devices))
+        syslog.syslog("[DeviceManager] opening: " + str(dev))
+        syslog.syslog("[DeviceManager] current devices: " + str(self.devices))
 
         parent = self.device_relpath(dev.parent)
 

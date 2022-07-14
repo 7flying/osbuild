@@ -213,8 +213,8 @@ class Stage:
             devmgr = DeviceManager(mgr, build_root.dev, tree)
                 
             for name, dev in self.devices.items():
-                syslog.syslog("name: " + name + ", dev: " + str(dev))
-                syslog.syslog("trying to open: " + str(dev))
+                syslog.syslog("[pipeline] name: " + name + ", dev: " + str(dev))
+                syslog.syslog("[pipeline] trying to open: " + str(dev))
                 devices[name] = devmgr.open(dev)
 
             mntmgr = MountManager(devmgr, mounts_tmpdir)
