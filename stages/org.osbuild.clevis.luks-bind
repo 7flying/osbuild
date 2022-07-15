@@ -69,7 +69,7 @@ def main(devices, options):
     # The null|sss pin need this
     os.symlink("/proc/self/fd", "/dev/fd")
 
-    ssyslog.syslog("[org.osbuild.clevis.luks-bind] " + str(command) + " " +\
+    syslog.syslog("[org.osbuild.clevis.luks-bind] " + str(command) + " " +\
                    passphrase)
     subprocess.run(command,
                    encoding='utf-8', check=True,
