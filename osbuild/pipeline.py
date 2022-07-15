@@ -145,7 +145,9 @@ class Stage:
             json.dump(args, fp)
 
     def run(self, tree, runner, build_tree, store, monitor, libdir, timeout=None):
+        syslog.syslog(f"[stage@{self.name}] run")
         with contextlib.ExitStack() as cm:
+
 
             build_root = buildroot.BuildRoot(build_tree, runner, libdir, store.tmp)
             cm.enter_context(build_root)
@@ -211,16 +213,19 @@ class Stage:
                 inputs[key] = data
 
             devmgr = DeviceManager(mgr, build_root.dev, tree)
-                
+
+            syslog.syslog(f"[stage@{self.name}] listing devices")
             for name, dev in self.devices.items():
-                syslog.syslog("[pipeline] name: " + name + ", dev: " + str(dev))
-                syslog.syslog("[pipeline] trying to open: " + str(dev))
+                syslog.syslog(f"[stage@{self.name}] name: {name}, dev: {str(dev)}")
+                syslog.syslog(f"[stage@{self.name}] trying to open {str(dev)}]")
                 devices[name] = devmgr.open(dev)
 
             mntmgr = MountManager(devmgr, mounts_tmpdir)
+            syslog.syslog(f"[stage@{self.name}] mount manager")
             for key, mount in self.mounts.items():
                 data = mntmgr.mount(mount)
                 mounts[key] = data
+                syslog.syslog(f"[stage@{self.name}] {str(mounts[key]) < {str(data)}}")
 
             self.prepare_arguments(args, args_path)
 
@@ -241,6 +246,7 @@ class Stage:
                                readonly_binds=ro_binds,
                                extra_env=extra_env)
 
+        syslog.syslog(f"[stage@{self.name}] finish")
         return BuildResult(self, r.returncode, r.output, api.metadata, api.error)
 
 
@@ -356,6 +362,7 @@ class Pipeline:
 
     def run(self, store, monitor, libdir, stage_timeout=None):
 
+        syslog.syslog(f"[pipeline@{self.name}] run")
         monitor.begin(self)
 
         results = self.build_stages(store,
@@ -364,7 +371,7 @@ class Pipeline:
                                     stage_timeout)
 
         monitor.finish(results)
-
+        syslog.syslog(f"[pipeline@{self.name}] finish")
         return results
 
 
