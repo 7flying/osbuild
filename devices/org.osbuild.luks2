@@ -119,7 +119,6 @@ class CryptDeviceService(devices.DeviceService):
                                  check=False,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT,
-                                 input="",
                                  encoding="UTF-8")
             if res.returncode == 0:
                 throwRuntime = False
