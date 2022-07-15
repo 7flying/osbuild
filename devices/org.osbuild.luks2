@@ -119,8 +119,8 @@ class CryptDeviceService(devices.DeviceService):
         #     syslog.syslog("luksDump result: " + str(res.returncode))
         #     syslog.syslog("output: " + res.stdout.strip())
 
-        if throwRuntime:
-            raise RuntimeError(runtimeMess)
+        #if throwRuntime:
+        #    raise RuntimeError(runtimeMess)
 
         syslog.syslog("opened as " + devname)
         print(f"opened as {devname}")
