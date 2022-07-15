@@ -19,6 +19,7 @@ shown in the `stat` call.
 import os
 import subprocess
 import sys
+import syslog
 
 import osbuild.api
 
@@ -40,10 +41,14 @@ SCHEMA = """
 
 
 def main(tree, options):
+    syslog.syslog("[org.osbuild.trucate] tree: " + str(tree) + ", options: " +\
+                  str(options))
     filename = options["filename"]
     size = options["size"]
 
     dest = os.path.join(tree, filename.lstrip("/"))
+    syslog.syslog("[org.osbuild.truncate] truncate --size " + str(size) +\
+                  " " + dest)
     subprocess.run(["truncate", "--size", size, dest], check=True)
 
     return 0

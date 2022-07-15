@@ -12,6 +12,7 @@ this stage can be used to rename the volume group.
 
 import os
 import sys
+import syslog
 
 import osbuild.api
 import osbuild.util.lvm2 as lvm2
@@ -56,6 +57,8 @@ SCHEMA_2 = r"""
 
 
 def main(devices, options):
+    syslog.syslog("[org.osbuild.copy] devices: " + str(devices) +\
+                  ", options: " + str(options))
     device = devices["device"]
     path = os.path.join("/dev", device["path"])
 

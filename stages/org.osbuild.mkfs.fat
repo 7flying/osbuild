@@ -14,7 +14,7 @@ Buildhost commands used: `mkfs.fat`.
 
 import subprocess
 import sys
-
+import syslog
 
 import osbuild.api
 
@@ -55,6 +55,8 @@ SCHEMA_2 = r"""
 
 
 def main(devices, options):
+    syslog.syslog("[org.osbuild.mkfs.fat] devices: " + str(devices) +\
+                  ", options: " + str(options))
     device = devices["device"]["path"]
 
     volid = options["volid"]
@@ -68,6 +70,8 @@ def main(devices, options):
     if fatsize:
         opts = ["-F", str(fatsize)]
 
+    syslog.syslog("[org.osbuild.mkfs.fat] mkfs.fat -I -i " + str(volid) +\
+                  " " + str(opts) + " " + str(device))
     subprocess.run(["mkfs.fat", "-I", "-i", volid] + opts + [device],
                    encoding='utf-8', check=True)
 

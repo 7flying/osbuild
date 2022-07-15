@@ -9,7 +9,7 @@ Buildhost commands used: `clevis`, `clevis-luks`, `clevis-pin-*`.
 import os
 import subprocess
 import sys
-
+import syslog
 
 import osbuild.api
 
@@ -48,6 +48,8 @@ SCHEMA_2 = r"""
 
 
 def main(devices, options):
+    syslog.syslog("[org.osbuild.clevis.luks-bind] devices: " + str(devices) +\
+                  ", options: " + str(options))
     device = devices["device"]
     passphrase = options["passphrase"]
     path = os.path.join("/dev", device["path"])
@@ -67,6 +69,8 @@ def main(devices, options):
     # The null|sss pin need this
     os.symlink("/proc/self/fd", "/dev/fd")
 
+    ssyslog.syslog("[org.osbuild.clevis.luks-bind] " + str(command) + " " +\
+                   passphrase)
     subprocess.run(command,
                    encoding='utf-8', check=True,
                    input=passphrase)

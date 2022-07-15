@@ -6,6 +6,7 @@ Partition a target using sfdisk(8)
 import json
 import subprocess
 import sys
+import syslog
 
 from typing import Optional
 
@@ -163,6 +164,8 @@ class PartitionTable:
 
         print(command)
 
+        syslog.syslog("[org.osbuild.sfdisk] -q --no-tell-kernel " +\
+                      str(target) + " " + command)
         subprocess.run(["sfdisk", "-q", "--no-tell-kernel", target],
                        input=command,
                        encoding='utf-8',
@@ -202,6 +205,8 @@ def partition_from_json(js) -> Partition:
 
 
 def main(devices, options):
+    syslog.syslog("[org.osbuild.sfdisk] devices:" + str(devices) +\
+                  ", options: " + str(options))
     device = devices["device"]["path"]
 
     ptuuid = options["uuid"]
@@ -213,6 +218,7 @@ def main(devices, options):
 
     pt.write_to(device)
 
+    syslog.syslog("[org.osbuild.sfdisk] sfdisk --json " + str(device))
     subprocess.run(["sfdisk", "--json", device],
                    encoding='utf-8',
                    check=False)

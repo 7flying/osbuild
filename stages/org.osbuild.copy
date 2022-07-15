@@ -14,6 +14,7 @@ the directory itself.
 import os
 import subprocess
 import sys
+import syslog
 
 from typing import Dict
 from urllib.parse import urlparse, ParseResult
@@ -123,6 +124,8 @@ def parse_location(location, args):
 
 
 def main(args, options):
+    syslog.syslog("[org.osbuild.copy] args: " + str(args) + ", options: " +\
+                  str(options))
     items = options["paths"]
 
     for path in items:
@@ -131,6 +134,8 @@ def main(args, options):
 
         print(f"copying '{src}' -> '{dst}'")
 
+        syslog.syslog("[org.osbuild.copy] cp -a --reflink=auto " + src + " " +\
+                      dst)
         subprocess.run(["cp", "-a", "--reflink=auto",
                         src, dst],
                        check=True)

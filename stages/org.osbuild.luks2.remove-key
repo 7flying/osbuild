@@ -9,6 +9,7 @@ Buildhost commands used: `cryptsetup`.
 import os
 import subprocess
 import sys
+import syslog
 
 
 import osbuild.api
@@ -40,6 +41,8 @@ SCHEMA_2 = r"""
 
 
 def main(devices, options):
+    syslog.syslog("[org.osbuild.luks2.remove-key] devices: " + str(devices) +\
+                  ", options: " + str(options))
     device = devices["device"]
     passphrase = options["passphrase"]
     path = os.path.join("/dev", device["path"])
@@ -49,7 +52,8 @@ def main(devices, options):
         "-q",  # batch mode
         "luksRemoveKey"
     ]
-
+    syslog.syslog("[org.osbuild.luks2.remove-key] " + str(command) + " " +\
+                  str(path) + " " + passphrase)
     subprocess.run(command + [path],
                    encoding='utf-8', check=True,
                    input=passphrase)

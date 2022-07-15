@@ -13,6 +13,7 @@ image has been completely assembled.
 import os
 import subprocess
 import sys
+import syslog
 import uuid
 
 
@@ -74,6 +75,8 @@ SCHEMA_2 = r"""
 
 
 def main(devices, options):
+    syslog.syslog("[org.osbuild.lvm2.create] devices: " + str(devices) +\
+                  ", options: " + str(options))
     device = devices["device"]
     volumes = options["volumes"]
     path = os.path.join("/dev", device["path"])
@@ -81,11 +84,14 @@ def main(devices, options):
     vg_name = str(uuid.uuid4())
 
     print(f"LVM2: using vg name '{vg_name}'")
+    syslog.syslog("[org.osbuild.lvm2.create] using vg name: " + vg_name)
 
+    syslog.syslog("[org.osbuild.lvm2.create] pvcreate " + path)
     subprocess.run(["pvcreate", path],
                    encoding='utf-8',
                    check=True)
 
+    syslog.syslog("[org.osbuild.lvm2.create] vgcrate " + vg_name + " " + path)
     subprocess.run(["vgcreate", vg_name, path],
                    encoding='utf-8',
                    check=True)
@@ -103,7 +109,7 @@ def main(devices, options):
             cmd += ["--size", size]
 
         cmd += ["-n", name, vg_name]
-
+        syslog.syslog("[org.osbuild.lvm2.create] " + str(cmd))
         subprocess.run(cmd, encoding='utf-8', check=True)
 
 

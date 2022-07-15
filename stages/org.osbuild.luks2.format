@@ -16,6 +16,7 @@ Buildhost commands used: `cryptsetup`.
 import os
 import subprocess
 import sys
+import syslog
 
 
 import osbuild.api
@@ -125,6 +126,8 @@ SCHEMA_2 = r"""
 
 
 def main(devices, options):
+    syslog.syslog("[org.osbuild.luks2.format] devices: " + str(devices) +\
+                  ", options: " + str(options))
     device = devices["device"]
     passphrase = options["passphrase"]
     device_uuid = options["uuid"]
@@ -171,6 +174,8 @@ def main(devices, options):
     if parallelism:
         command += ["--pbkdf-parallel", str(parallelism)]
 
+    syslog.syslog("[org.osbuild.luks2.format] " + command + " " + str(path) +\
+                  " " + passphrase)
     subprocess.run(command + [path],
                    encoding='utf-8', check=True,
                    input=passphrase)
