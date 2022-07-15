@@ -174,8 +174,8 @@ def main(devices, options):
     if parallelism:
         command += ["--pbkdf-parallel", str(parallelism)]
 
-    syslog.syslog("[org.osbuild.luks2.format] " + command + " " + str(path) +\
-                  " " + passphrase)
+    syslog.syslog("[org.osbuild.luks2.format] " + str(command) + " " +\
+                  str(path) + " " + passphrase)
     subprocess.run(command + [path],
                    encoding='utf-8', check=True,
                    input=passphrase)
