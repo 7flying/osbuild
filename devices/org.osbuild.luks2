@@ -114,6 +114,20 @@ class CryptDeviceService(devices.DeviceService):
             syslog.syslog(msg)
             throwRuntime = True
             runtimeMess = msg
+            syslog.syslog(f"[org.osbuild.luks2] trying without passphrase")
+            res = subprocess.run(["cryptsetup", "-q", "open", parent_dev, devname],
+                                 check=False,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
+                                 input="",
+                                 encoding="UTF-8")
+            if res.returncode == 0:
+                throwRuntime = False
+                syslog.syslog(f"[org.osbuild.luks2] success!")
+            else:
+                syslog.syslog(f"[org.osbuild.luks2] we are erroing again:")
+                data = res.stdout.strip()
+                syslog.syslog(data)
         # res = subprocess.run(["cryptsetup", "-q", "luksDump", devpath])
         # if res:
         #     syslog.syslog("luksDump result: " + str(res.returncode))
