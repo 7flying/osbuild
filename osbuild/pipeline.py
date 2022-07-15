@@ -225,7 +225,7 @@ class Stage:
             for key, mount in self.mounts.items():
                 data = mntmgr.mount(mount)
                 mounts[key] = data
-                syslog.syslog(f"[stage@{self.name}] {str(mounts[key]) < {str(data)}}")
+                syslog.syslog(f"[stage@{self.name}] {str(mounts[key])} < {str(data)}")
 
             self.prepare_arguments(args, args_path)
 
