@@ -52,11 +52,13 @@ def main(devices, options):
         "-q",  # batch mode
         "luksRemoveKey"
     ]
-    syslog.syslog("[org.osbuild.luks2.remove-key] " + str(command) + " " +\
-                  str(path) + " " + passphrase)
-    subprocess.run(command + [path],
-                   encoding='utf-8', check=True,
-                   input=passphrase)
+    syslog.syslog(f"[org.osbuild.luks2.remove-key] {str(command)} {str(path)} {str(passphrase)}")
+    res = subprocess.run(command + [path],
+                         encoding='utf-8', check=True,
+                         input=passphrase)
+    if res.returncode != 0:
+        data = res.stdout.strip()
+        syslog.syslog(f"error on luks2.remove-key: {data}")
 
 
 if __name__ == '__main__':

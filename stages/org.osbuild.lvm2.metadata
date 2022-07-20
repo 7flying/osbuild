@@ -57,7 +57,7 @@ SCHEMA_2 = r"""
 
 
 def main(devices, options):
-    syslog.syslog("[org.osbuild.copy] devices: " + str(devices) +\
+    syslog.syslog("[org.osbuild.metadata] devices: " + str(devices) +\
                   ", options: " + str(options))
     device = devices["device"]
     path = os.path.join("/dev", device["path"])

@@ -219,6 +219,8 @@ class Stage:
                 syslog.syslog(f"[stage@{self.name}] name: {name}, dev: {str(dev)}")
                 syslog.syslog(f"[stage@{self.name}] trying to open {str(dev)}]")
                 devices[name] = devmgr.open(dev)
+            if len(self.devices.items()) == 0:
+                syslog.syslog(f"[stage@{self.name}] no devices")
 
             mntmgr = MountManager(devmgr, mounts_tmpdir)
             syslog.syslog(f"[stage@{self.name}] mount manager")
@@ -226,6 +228,8 @@ class Stage:
                 data = mntmgr.mount(mount)
                 mounts[key] = data
                 syslog.syslog(f"[stage@{self.name}] {str(mounts[key])} < {str(data)}")
+            if len(self.mounts.items()) == 0:
+                syslog.syslog(f"[stage@{self.name}] no mounts")
 
             self.prepare_arguments(args, args_path)
 
