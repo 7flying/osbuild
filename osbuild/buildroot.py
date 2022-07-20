@@ -13,6 +13,7 @@ import os
 import select
 import stat
 import subprocess
+import syslog
 import tempfile
 import time
 
@@ -301,6 +302,7 @@ class BuildRoot(contextlib.AbstractContextManager):
         if extra_env:
             env.update(extra_env)
 
+        syslog.syslog(f"[BuildRoot] subprocess.Popen {cmd}")
         proc = subprocess.Popen(cmd,
                                 bufsize=0,
                                 env=env,
