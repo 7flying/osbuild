@@ -111,6 +111,8 @@ class Stage:
     def add_device(self, name, info, parent, options):
         dev = Device(name, info, parent, options)
         self.devices[name] = dev
+        syslog.syslog(f"[stage@{self.name}] add_device: {name}, {str(info)}, "
+                      f"{str(parent)} {str(options)}")
         return dev
 
     def add_mount(self, name, info, device, target, options):
