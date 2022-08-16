@@ -33,6 +33,10 @@ SCHEMA = r"""
         "items": {
           "type": "string"
         }
+      },
+      "_dbpath": {
+        "description": "Specify the rpm database path.",
+        "type": "string"
       }
     }
   }
@@ -56,7 +60,7 @@ def main(tree, options):
     with open(path, "w", encoding="utf-8") as f:
         for k, v in options["macros"].items():
             value = make_value(k, v)
-            line = f"%{k} {value}"
+            line = f"%{k} {value}\n"
             f.write(line)
 
 

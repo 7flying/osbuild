@@ -41,12 +41,17 @@ import sys
 import tempfile
 from operator import itemgetter
 
+from osbuild.util.mnt import mount
 from osbuild import api
 
 
 SCHEMA = """
 "additionalProperties": false,
 "properties": {
+   "dbpath": {
+     "desription": "Use the given path as RPM database",
+     "type": "string"
+  },
   "disable_dracut": {
     "description": "Prevent dracut from running",
     "type": "boolean"
@@ -99,6 +104,10 @@ SCHEMA = """
         }
       ]
     }
+  },
+  "ostree_booted": {
+    "type": "boolean",
+    "description": "Create the '/run/ostree-booted' marker"
   }
 }
 """
@@ -109,6 +118,10 @@ SCHEMA_2 = """
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "dbpath": {
+      "desription": "Use the given path as RPM database",
+      "type": "string"
+    },
     "gpgkeys": {
       "description": "Array of GPG key contents to import",
       "type": "array",
@@ -142,6 +155,10 @@ SCHEMA_2 = """
        "items": {
         "type": "string"
       }
+    },
+    "ostree_booted": {
+      "type": "boolean",
+      "description": "Create the '/run/ostree-booted' marker"
     }
   }
 },
@@ -159,7 +176,13 @@ SCHEMA_2 = """
 """
 
 
-def generate_package_metadata(tree):
+# File to mark a system as ostree booted. Also used by certain packages
+# like e.g. authselect, to adjust its behavior during installation.
+# Controlled via the `ostree_booted` option.
+OSTREE_BOOTED_MARKER = "run/ostree-booted"
+
+
+def generate_package_metadata(tree, rpm_args):
     query = r"""\{
     "name": "%{NAME}",
     "version": "%{VERSION}",
@@ -174,6 +197,7 @@ def generate_package_metadata(tree):
 
     cmd = [
         "rpm",
+        *rpm_args,
         "-qa",
         "--root", tree,
         "--qf=" + query
@@ -211,10 +235,12 @@ def enable_dracut(masked_files):
         os.unlink(path)
 
 
-def remove_unowned_etc_kernel(tree):
+def remove_unowned_etc_kernel(tree, rpm_args):
     # if installed, /etc/kernel is owned by systemd-udev; but
     # in case the directory is un-owned, remove it again
+
     res = subprocess.run(["rpm",
+                          *rpm_args,
                           "--root", tree,
                           "-qf", "/etc/kernel"],
                          stdout=subprocess.PIPE,
@@ -238,8 +264,31 @@ def parse_input(inputs):
     return path, files
 
 
+def create_machine_id_if_needed(tree):
+    """Create a machine-id with a fake machine id if it does not exist"""
+    path = f"{tree}/etc/machine-id"
+    if os.path.exists(path):
+        return False
+
+    os.makedirs(f"{tree}/etc", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        # create a fake machine ID to improve reproducibility
+        f.write("ffffffffffffffffffffffffffffffff")
+        os.fchmod(f.fileno(), 0o400)
+
+    return True
+
+
+# pylint: disable=too-many-branches
 def main(tree, inputs, options):
     pkgpath, packages = parse_input(inputs)
+
+    dbpath = options.get("dbpath")
+
+    rpm_args = []
+    if dbpath:
+        print(f"dbpath set to '{dbpath}'")
+        rpm_args += ["--dbpath", dbpath]
 
     for key in options.get("gpgkeys", []):
         with tempfile.NamedTemporaryFile(prefix="gpgkey.", mode="w") as keyfile:
@@ -247,6 +296,7 @@ def main(tree, inputs, options):
             keyfile.flush()
             subprocess.run([
                 "rpmkeys",
+                *rpm_args,
                 "--root", tree,
                 "--import", keyfile.name
             ], check=True)
@@ -256,33 +306,27 @@ def main(tree, inputs, options):
         if data.get("rpm.check_gpg"):
             subprocess.run([
                 "rpmkeys",
+                *rpm_args,
                 "--root", tree,
                 "--checksig",
                 filename
             ], cwd=pkgpath, stdout=subprocess.DEVNULL, check=True)
 
-    script = f"""
-        set -e
-        mkdir -p {tree}/dev {tree}/sys {tree}/proc
-        mount -o bind /dev {tree}/dev
-        mount -o bind /sys {tree}/sys
-        mount -o bind /proc {tree}/proc
-    """
+    for source in ("/dev", "/sys", "/proc"):
+        target = os.path.join(tree, source.lstrip("/"))
+        os.makedirs(target, exist_ok=True)
+        mount(source, target, ro=False)
 
-    machine_id_set_previously = os.path.exists(f"{tree}/etc/machine-id")
-    if not machine_id_set_previously:
-        # create a fake machine ID to improve reproducibility
-        print("creating a fake machine id")
-        script += f"""
-            mkdir -p {tree}/etc
-            echo "ffffffffffffffffffffffffffffffff" > {tree}/etc/machine-id
-            chmod 0444 {tree}/etc/machine-id
-        """
+    machine_id_created = create_machine_id_if_needed(tree)
 
-    subprocess.run(["/bin/sh", "-c", script], check=True)
+    ostree_booted = None
+    if options.get("ostree_booted", False):
+        os.makedirs(f"{tree}/run", exist_ok=True)
+        ostree_booted = f"{tree}/{OSTREE_BOOTED_MARKER}"
+        with open(ostree_booted, "w", encoding="utf-8") as f:
+            f.write("")
 
     extra_args = []
-
     if options.get("exclude", {}).get("docs"):
         extra_args += ["--excludedocs"]
 
@@ -305,6 +349,7 @@ def main(tree, inputs, options):
         subprocess.run([
             "rpm",
             "--verbose",
+            *rpm_args,
             "--root", tree,
             *extra_args,
             # All digests and signatures of the rpms has been verified,
@@ -318,6 +363,7 @@ def main(tree, inputs, options):
         path = os.path.join(tree, key.lstrip("/"))
         subprocess.run([
             "rpmkeys",
+            *rpm_args,
             "--root", tree,
             "--import", path
         ], check=True)
@@ -326,21 +372,24 @@ def main(tree, inputs, options):
     # re-enabled dracut
     if no_dracut:
         enable_dracut(masked_files)
-        remove_unowned_etc_kernel(tree)
+        remove_unowned_etc_kernel(tree, rpm_args)
 
     # remove temporary machine ID if it was created by us
-    if not machine_id_set_previously:
+    if machine_id_created:
         print("deleting the fake machine id")
         machine_id_file = pathlib.Path(f"{tree}/etc/machine-id")
         machine_id_file.unlink()
         machine_id_file.touch()
+
+    if ostree_booted:
+        os.unlink(ostree_booted)
 
     # remove random seed from the tree if exists
     with contextlib.suppress(FileNotFoundError):
         os.unlink(f"{tree}/var/lib/systemd/random-seed")
 
     # generate the metadata
-    md = generate_package_metadata(tree)
+    md = generate_package_metadata(tree, rpm_args)
     api.metadata(md)
 
     return 0
