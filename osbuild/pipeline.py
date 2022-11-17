@@ -13,6 +13,7 @@ from .mounts import Mount, MountManager
 from .objectstore import ObjectStore
 from .sources import Source
 from .util import osrelease
+import syslog
 
 DEFAULT_CAPABILITIES = {
     "CAP_AUDIT_WRITE",
@@ -143,6 +144,7 @@ class Stage:
             json.dump(args, fp)
 
     def run(self, tree, runner, build_tree, store, monitor, libdir, timeout=None):
+        syslog.syslog("running @pipeline: " + self.name)
         with contextlib.ExitStack() as cm:
 
             build_root = buildroot.BuildRoot(build_tree, runner.path, libdir, store.tmp)
@@ -236,6 +238,9 @@ class Stage:
                                readonly_binds=ro_binds,
                                extra_env=extra_env)
 
+        syslog.syslog("@pipeline: " + self.name + " end: " +\
+                      str(r.returncode) + " " + str(r.output) + " " +\
+                      str(api.metadata) + " " + str(api.error))
         return BuildResult(self, r.returncode, r.output, api.metadata, api.error)
 
 
