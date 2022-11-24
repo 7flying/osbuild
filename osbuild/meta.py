@@ -28,6 +28,7 @@ import json
 import os
 import pkgutil
 import sys
+import syslog
 from collections import deque
 from typing import (Any, Deque, Dict, List, Optional, Sequence, Set, Tuple,
                     Union)
@@ -122,6 +123,7 @@ class ValidationResult:
     def __init__(self, origin: Optional[str]):
         self.origin = origin
         self.errors: Set[ValidationError] = set()
+        syslog.syslog("@ValidationResult, init: " + str(self.origin))
 
     def fail(self, msg: str) -> ValidationError:
         """Add a new `ValidationError` with `msg` as message"""
@@ -161,6 +163,7 @@ class ValidationResult:
         errors = [e.as_dict() for e in self]
         if not errors:
             return {}
+        syslog.syslog("@ValidationResult, as_dict: " + str(errors))
 
         return {
             "type": FAILED_TYPEURI,
@@ -221,9 +224,12 @@ class Schema:
         self.data = schema
         self.name = name
         self._validator: Optional[jsonschema.Draft4Validator] = None
+        syslog.syslog("@schema init: name: " + self.name + " schema: " +
+                      str(self.data))
 
     def check(self) -> ValidationResult:
         """Validate the `schema` data itself"""
+        syslog.syslog("@schema check")
         res = ValidationResult(self.name)
 
         # validator is assigned if and only if the schema
@@ -248,6 +254,7 @@ class Schema:
             Validator.check_schema(self.data)
             self._validator = Validator(self.data)
         except jsonschema.exceptions.SchemaError as err:
+            syslog.syslog("@schema check error: " + str(err))
             res += ValidationError.from_exception(err)
 
         return res
