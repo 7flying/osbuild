@@ -10,6 +10,8 @@ from ..inputs import Input
 from ..pipeline import Manifest, Pipeline, Runner, Stage
 from ..sources import Source
 
+import syslog
+
 VERSION = "2"
 
 
@@ -468,6 +470,7 @@ def validate(manifest: Dict, index: Index) -> ValidationResult:
     result = schema.validate(manifest)
 
     def validate_module(mod, klass, path):
+        syslog.syslog("@validate_module, mod: " + str(mod))
         name = mod.get("type")
         if not name:
             return
